@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skin & Eye Study</title>
+<link rel="stylesheet" href="../styles.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <p class="subtitle">Biology · Fill in the Blank</p>
+    <div class="title">Skin & Eye</div>
+  </header>
+
+  <div class="scorebar">
+    <div class="score-item">
+      <span class="score-dot correct"></span>
+      <span class="score-val" id="correct-count">0</span>
+      <span class="score-label">correct</span>
+    </div>
+    <div class="score-item">
+      <span class="score-dot wrong"></span>
+      <span class="score-val" id="wrong-count">0</span>
+      <span class="score-label">wrong</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="q-counter" id="q-counter">1 / 1</div>
+  </div>
+
+  <div id="quiz-area">
+    <div class="card" id="question-card">
+      <div class="category-badge" id="category-badge"></div>
+      <div class="question-text" id="question-display"></div>
+      <div class="blank-label" id="blank-label">Your answer</div>
+      <div id="inputs-area"></div>
+      <div class="feedback" id="feedback">
+        <span class="feedback-icon"></span>
+        <span class="feedback-text"></span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="submit-btn" onclick="checkAnswer()">Check Answer</button>
+        <button class="btn btn-skip" onclick="nextQuestion()">Skip →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="complete" id="complete-screen">
+    <div class="complete-icon">👁️</div>
+    <h2>Study session complete!</h2>
+    <p id="complete-sub"></p>
+    <div class="final-stats">
+      <div class="stat-big green"><span class="num" id="final-correct">0</span><span class="lbl">Correct</span></div>
+      <div class="stat-big red"><span class="num" id="final-wrong">0</span><span class="lbl">Wrong</span></div>
+      <div class="stat-big"><span class="num" id="final-pct" style="color:var(--accent)">0%</span><span class="lbl">Score</span></div>
+    </div>
+    <button class="btn btn-restart" onclick="restart()">Study Again</button>
+  </div>
+
+</div>
+
+<div class="toast" id="fuzzy-toast">
+  <span class="toast-icon">💡</span>
+  <div class="toast-body">
+    <div class="toast-title">Close enough — marked correct</div>
+    <div class="toast-msg" id="toast-msg"></div>
+  </div>
+  <button class="toast-close" onclick="dismissToast()">✕</button>
+</div>
+
+<script>
+const questions = [
+
+  // ── SKIN VOCABULARY ─────────────────────────────────────────────────────────
+  { cat: "Skin Vocabulary", question: "The pigment that gives skin its color is __________.", answer: "melanin" },
+  { cat: "Skin Vocabulary", question: "__________ glands are located in the external ear and secrete a waxy material.", answer: "ceruminous" },
+  { cat: "Skin Vocabulary", question: "Another name for the skin is the __________ membrane.", answer: "cutaneous" },
+  { cat: "Skin Vocabulary", question: "Skin receptors sensitive to pain are called __________ receptors.", answer: "pain" },
+  { cat: "Skin Vocabulary", question: "The body system that comprises the skin and its related structures is called the __________ system.", answer: "integumentary" },
+  { cat: "Skin Vocabulary", question: "__________ glands secrete an oily substance into hair follicles.", answer: "sebaceous" },
+  { cat: "Skin Vocabulary", question: "The epidermis is made up of __________ squamous epithelial cells.", answer: "stratified" },
+  { cat: "Skin Vocabulary", question: "__________ fibers give skin its strength.", answer: "collagenous" },
+  { cat: "Skin Vocabulary", question: "The outer layer of dead skin cells is called the stratum __________.", answer: "corneum" },
+  { cat: "Skin Vocabulary", question: "The most numerous of all skin glands are __________ glands.", answer: "sweat" },
+  { cat: "Skin Vocabulary", question: "The layer of skin cells directly above the dermis is the __________.", answer: "epidermis" },
+  { cat: "Skin Vocabulary", question: "Skin receptors sensitive to touch are called __________ corpuscles.", answer: "ruffinis" },
+  { cat: "Skin Vocabulary", question: "The fold of skin covering the root of the nail is called the __________.", answer: "cuticle" },
+
+  // ── SKIN DISORDERS ──────────────────────────────────────────────────────────
+  { cat: "Skin Disorders", question: "Acne results when pores become clogged and infected with __________, which produce pus causing pimples.", answer: "bacteria" },
+  { cat: "Skin Disorders", question: "Avoiding __________ radiation reduces the risk of skin cancer.", answer: "uv" },
+  { cat: "Skin Disorders", question: "__________ is the most common form of skin cancer, developing in epidermal cells that do not produce melanin.", answer: "carcinoma" },
+  { cat: "Skin Disorders", question: "__________ is a skin cancer that occurs in pigment-producing epidermal cells and spreads quickly to other parts of the body.", answer: "melanoma" },
+  { cat: "Skin Disorders", question: "Athlete's foot and ringworm are examples of __________ infections of the skin.", answer: "fungal" },
+  { cat: "Skin Disorders", question: "__________ is a hereditary skin disorder that causes red, scaly skin and occurs when the immune system is low.", answer: "psoriasis" },
+
+  // ── SKIN OVERVIEW ───────────────────────────────────────────────────────────
+  { cat: "Skin Overview", question: "Skin is composed of the outer __________ and the lower dermis.", answer: "epidermis" },
+  { cat: "Skin Overview", question: "The protective layer beneath the dermis is called the __________ layer.", answer: "subcutaneous" },
+  { cat: "Skin Overview", question: "It takes about __________ days for all outer skin cells to be replaced.", answer: "27" },
+  { cat: "Skin Overview", question: "Specialized cells called __________ within the epidermis produce a brownish pigment called melanin.", answer: "melanocytes" },
+  { cat: "Skin Overview", question: "People of all races have about the same number of melanocytes but differ in the amount of __________ produced.", answer: "melanin" },
+  { cat: "Skin Overview", question: "The dermis is composed mainly of __________ tissue, which gives skin its strength and elasticity.", answer: "connective" },
+  { cat: "Skin Overview", question: "__________ of the skin occurs in the dermal layer.", answer: "wrinkling" },
+  { cat: "Skin Overview", question: "Skin is the largest __________ of the vertebrate body.", answer: "organ" },
+  { cat: "Skin Overview", question: "Skin composes about __________ percent of an adult's body weight.", answer: "15" },
+  { cat: "Skin Overview", question: "Among the structures in the dermis are blood vessels, nerves, hair follicles, oil glands, and __________ glands.", answer: "sweat" },
+
+  // ── EYE VOCABULARY ──────────────────────────────────────────────────────────
+  { cat: "Eye Vocabulary", question: "The __________ is a hole through the iris that lets light enter the eye.", answer: "pupil" },
+  { cat: "Eye Vocabulary", question: "The __________ is a very small area on the retina with the sharpest focus of incoming light.", answer: "fovea" },
+  { cat: "Eye Vocabulary", question: "The __________ is an area of the retina that does not register incoming light.", answer: "blind spot" },
+  { cat: "Eye Vocabulary", question: "The __________ is the colored part of the eye that regulates the amount of light entering.", answer: "iris" },
+  { cat: "Eye Vocabulary", question: "The __________ is the middle layer of the eyeball with black pigment that prevents internal light reflection.", answer: "choroid" },
+  { cat: "Eye Vocabulary", question: "The __________ body is the gel-like material filling the posterior section of the eyeball.", answer: "vitreous" },
+  { cat: "Eye Vocabulary", question: "The __________ nerve carries visual nerve impulses from the eye to the brain.", answer: "optic" },
+  { cat: "Eye Vocabulary", question: "__________ humor is the liquid filling the anterior section of the eyeball.", answer: "aqueous" },
+  { cat: "Eye Vocabulary", question: "The __________ is a thin mucous membrane that lubricates and covers the cornea and eyelids.", answer: "conjunctiva" },
+  { cat: "Eye Vocabulary", question: "The __________ is the outer protective layer of the eyeball.", answer: "sclera" },
+  { cat: "Eye Vocabulary", question: "The __________ is the transparent front part of the sclera that helps focus incoming light.", answer: "cornea" },
+  { cat: "Eye Vocabulary", question: "The __________ is the inner layer of the eye containing light-sensitive rods and cones.", answer: "retina" },
+  { cat: "Eye Vocabulary", question: "__________ ligaments are the structures that hold the lens in place.", answer: "suspensory" },
+  { cat: "Eye Vocabulary", question: "The __________ focuses light rays onto the retina.", answer: "lens" },
+  { cat: "Eye Vocabulary", question: "__________ are retinal cells sensitive to low light but not color.", answer: "rods" },
+  { cat: "Eye Vocabulary", question: "__________ are retinal cells responsible for color vision.", answer: "cones" },
+
+  // ── EYE OVERVIEW ────────────────────────────────────────────────────────────
+  { cat: "Eye Overview", question: "Light first passes through the __________, which begins to focus it onto the rear of the eye.", answer: "cornea" },
+  { cat: "Eye Overview", question: "The lens is held in place by suspending ligaments attached to __________ muscles.", answer: "ciliary" },
+  { cat: "Eye Overview", question: "Contraction of the ciliary muscles changes the __________ of the lens and the focal point.", answer: "shape" },
+  { cat: "Eye Overview", question: "The iris controls the amount of light entering by reducing the size of the __________.", answer: "pupil" },
+  { cat: "Eye Overview", question: "The retina contains about 3 million __________ that detect color.", answer: "cones" },
+  { cat: "Eye Overview", question: "The retina contains about one billion __________ that detect light and dark.", answer: "rods" },
+  { cat: "Eye Overview", question: "The central region of the retina where images are focused is called the __________.", answer: "fovea" },
+  { cat: "Eye Overview", question: "The __________ nerve transmits visual impulses directly to the brain.", answer: "optic" },
+  { cat: "Eye Overview", question: "People whose point of focus lies in front of the fovea are said to be __________ sighted.", answer: "near" },
+  { cat: "Eye Overview", question: "People whose point of focus lies behind the fovea are said to be __________ sighted.", answer: "far" },
+  { cat: "Eye Overview", question: "__________ lenses may be used to focus the image onto the fovea, correcting near- or farsightedness.", answer: "corrective" },
+
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let deck = shuffle(questions);
+let idx = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let answered = false;
+
+function formatQuestion(q) {
+  return q
+    .replace(/\*{3,}/g, '<span style="color:var(--accent);font-weight:700">_____</span>')
+    .replace(/_{8,}/g, '<span style="color:var(--accent);font-weight:700">_____</span>');
+}
+
+function loadQuestion() {
+  answered = false;
+  const q = deck[idx];
+  const answers = q.answer.split(',');
+  const isMulti = answers.length > 1;
+
+  document.getElementById('category-badge').textContent = q.cat;
+  document.getElementById('question-display').innerHTML = formatQuestion(q.question);
+  document.getElementById('q-counter').textContent = `${idx + 1} / ${deck.length}`;
+
+  const label = document.getElementById('blank-label');
+  label.textContent = isMulti ? `Fill in all ${answers.length} blanks` : 'Your answer';
+
+  const area = document.getElementById('inputs-area');
+  area.innerHTML = '';
+
+  answers.forEach((ans, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'input-wrap';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'blank-input';
+    input.id = `blank-${i}`;
+    input.placeholder = isMulti ? `Blank ${i + 1}` : 'Type your answer...';
+    input.autocomplete = 'off';
+    input.autocorrect = 'off';
+    input.spellcheck = false;
+
+    const reveal = document.createElement('div');
+    reveal.className = 'correct-answer-reveal';
+    reveal.id = `reveal-${i}`;
+    reveal.textContent = `✓ ${ans.split('/')[0]}`;
+
+    wrap.appendChild(input);
+    wrap.appendChild(reveal);
+    area.appendChild(wrap);
+  });
+
+  const card = document.getElementById('question-card');
+  card.className = 'card';
+
+  const feedback = document.getElementById('feedback');
+  feedback.className = 'feedback';
+  feedback.querySelector('.feedback-icon').textContent = '';
+  feedback.querySelector('.feedback-text').textContent = '';
+
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Check Answer';
+  btn.disabled = false;
+
+  setTimeout(() => {
+    const first = document.getElementById('blank-0');
+    if (first) { first.focus(); first.select(); }
+  }, 50);
+
+  updateProgress();
+}
+
+function normalize(s) {
+  return s.trim().toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ');
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) => [i]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function isFuzzyMatch(userVal, validOptions) {
+  const u = normalize(userVal);
+  for (const opt of validOptions) {
+    const o = normalize(opt);
+    if (u === o) return false;
+    const maxLen = Math.max(u.length, o.length);
+    if (maxLen === 0) continue;
+    const dist = levenshtein(u, o);
+    const threshold = maxLen <= 6 ? 1 : maxLen <= 10 ? 2 : 3;
+    if (dist <= threshold) return true;
+  }
+  return false;
+}
+
+let toastTimer = null;
+
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  document.getElementById('toast-msg').innerHTML = msg;
+  document.getElementById('fuzzy-toast').classList.add('show');
+  toastTimer = setTimeout(() => dismissToast(), 4000);
+}
+
+function dismissToast() {
+  document.getElementById('fuzzy-toast').classList.remove('show');
+}
+
+function getPermutations(arr) {
+  if (arr.length <= 1) return [arr];
+  const result = [];
+  for (let i = 0; i < arr.length; i++) {
+    const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+    for (const perm of getPermutations(rest)) result.push([arr[i], ...perm]);
+  }
+  return result;
+}
+
+function checkAnswer() {
+  if (answered) { nextQuestion(); return; }
+
+  const q = deck[idx];
+  const answers = q.answer.split(',');
+  const userVals = answers.map((_, i) => document.getElementById(`blank-${i}`).value);
+
+  let allCorrect = true;
+  let fuzzyMessages = [];
+
+  let swapped = false;
+  if (answers.length > 1) {
+    const permutations = getPermutations(userVals);
+    for (const perm of permutations) {
+      if (perm.join('|') === userVals.join('|')) continue;
+      const allMatch = perm.every((val, i) => {
+        const opts = answers[i].split('/');
+        return opts.map(o => normalize(o)).includes(normalize(val)) || isFuzzyMatch(val, opts);
+      });
+      if (allMatch) { swapped = true; break; }
+    }
+  }
+
+  answers.forEach((ans, i) => {
+    const input = document.getElementById(`blank-${i}`);
+    const reveal = document.getElementById(`reveal-${i}`);
+    const actualUserVal = userVals[i];
+
+    const validOptions = ans.split('/');
+    const validNorm = validOptions.map(o => normalize(o));
+    const isExact = validNorm.includes(normalize(actualUserVal));
+    const isFuzzy = !isExact && isFuzzyMatch(actualUserVal, validOptions);
+    const isRight = isExact || isFuzzy || swapped;
+
+    if (isFuzzy) {
+      fuzzyMessages.push(`You wrote <strong>"${actualUserVal}"</strong> — the answer is <strong>"${validOptions[0]}"</strong>`);
+    }
+
+    input.disabled = true;
+    input.className = 'blank-input ' + (isRight ? 'correct' : 'wrong');
+
+    if (!isRight) {
+      allCorrect = false;
+      reveal.className = 'correct-answer-reveal show';
+    }
+  });
+
+  if (swapped && answers.length > 1) {
+    const correctList = answers.map(a => `<strong>"${a.split('/')[0]}"</strong>`).join(' and ');
+    fuzzyMessages = [`Your answers were in the wrong order — the correct order is ${correctList}`];
+  }
+
+  const card = document.getElementById('question-card');
+  const feedback = document.getElementById('feedback');
+
+  if (allCorrect) {
+    correctCount++;
+    card.className = 'card correct-state pop';
+    feedback.className = 'feedback correct show';
+    feedback.querySelector('.feedback-icon').textContent = '✓';
+    feedback.querySelector('.feedback-text').textContent = fuzzyMessages.length > 0 ? 'Close enough — marked correct!' : 'Correct!';
+    card.addEventListener('animationend', () => card.classList.remove('pop'), {once: true});
+    if (fuzzyMessages.length > 0) showToast(fuzzyMessages.join('<br>'));
+    setTimeout(() => nextQuestion(), fuzzyMessages.length > 0 ? 1400 : 900);
+  } else {
+    wrongCount++;
+    card.className = 'card wrong-state shake';
+    feedback.className = 'feedback wrong show';
+    feedback.querySelector('.feedback-icon').textContent = '✗';
+    feedback.querySelector('.feedback-text').textContent = 'Not quite — check the correct answer above.';
+    card.addEventListener('animationend', () => {
+      card.classList.remove('shake');
+      card.classList.add('wrong-state');
+    }, {once: true});
+  }
+
+  document.getElementById('correct-count').textContent = correctCount;
+  document.getElementById('wrong-count').textContent = wrongCount;
+
+  answered = true;
+  document.getElementById('submit-btn').textContent = idx < deck.length - 1 ? 'Next Question →' : 'See Results →';
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx >= deck.length) { showComplete(); return; }
+  loadQuestion();
+}
+
+function updateProgress() {
+  document.getElementById('progress-fill').style.width = (idx / deck.length * 100) + '%';
+}
+
+function showComplete() {
+  document.getElementById('quiz-area').style.display = 'none';
+  document.getElementById('complete-screen').classList.add('show');
+  document.getElementById('complete-sub').textContent = `You've gone through all ${deck.length} questions.`;
+  document.getElementById('final-correct').textContent = correctCount;
+  document.getElementById('final-wrong').textContent = wrongCount;
+  const total = correctCount + wrongCount;
+  document.getElementById('final-pct').textContent = total > 0 ? Math.round(correctCount / total * 100) + '%' : '0%';
+  document.getElementById('progress-fill').style.width = '100%';
+}
+
+function restart() {
+  deck = shuffle(questions);
+  idx = 0; correctCount = 0; wrongCount = 0; answered = false;
+  document.getElementById('correct-count').textContent = 0;
+  document.getElementById('wrong-count').textContent = 0;
+  document.getElementById('complete-screen').classList.remove('show');
+  document.getElementById('quiz-area').style.display = 'block';
+  loadQuestion();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  if (!answered) checkAnswer();
+  else nextQuestion();
+});
+
+loadQuestion();
+</script>
+</body>
+</html>
